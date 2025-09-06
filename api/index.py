@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
-from mangum import Mangum
+#from mangum import Mangum
 from ai import chat_with_gemini
 
 app = FastAPI()
@@ -30,4 +30,6 @@ async def chat_endpoint(request: ChatRequest):
     return {"response": bot_reply}
 
 # Needed for Vercel serverless
-handler = Mangum(app)
+# def handler(event, context):
+#     asgi_handler = Mangum(app)
+#     return asgi_handler(event, context)
