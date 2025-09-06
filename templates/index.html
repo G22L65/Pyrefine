@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pyrefine</title>
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <style>
+        /* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Chat container */
+.chat-container {
+    width: 100%;
+    max-width: 800px;
+    height: 90vh;
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Chat header */
+.chat-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #4ade80;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-text {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Chat messages */
+.chat-messages {
+    flex: 1;
+    padding: 20px 30px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Message styles */
+.message {
+    display: flex;
+    gap: 12px;
+    max-width: 80%;
+}
+
+.user-message {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.bot-message {
+    align-self: flex-start;
+}
+
+.message-avatar {
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.user-message .avatar {
+    background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+}
+
+.message-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.message-text {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.user-message .message-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.message-time {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+    text-align: right;
+}
+
+.user-message .message-time {
+    text-align: left;
+}
+
+/* Chat input */
+.chat-input-container {
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #e5e7eb;
+}
+
+.chat-input-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 25px;
+    padding: 8px 8px 8px 20px;
+    transition: border-color 0.2s ease;
+}
+
+.chat-input-wrapper:focus-within {
+    border-color: #667eea;
+}
+
+#messageInput {
+    flex: 1;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 15px;
+    line-height: 1.5;
+    max-height: 120px;
+    font-family: inherit;
+    background: transparent;
+}
+
+#messageInput::placeholder {
+    color: #9ca3af;
+}
+
+.send-button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.send-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.send-button:active {
+    transform: scale(0.95);
+}
+
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.input-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.char-count {
+    font-weight: 500;
+}
+
+.input-hint {
+    font-style: italic;
+}
+
+/* Typing indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.typing-indicator.show {
+    opacity: 1;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 18px;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #9ca3af;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* Code block styles */
+.code-block {
+    background: #1e1e1e;
+    border-radius: 8px;
+    margin: 8px 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.code-header {
+    background: #2d2d2d;
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #a0a0a0;
+    border-bottom: 1px solid #3d3d3d;
+}
+
+.code-language {
+    font-weight: 500;
+    color: #4ade80;
+}
+
+.copy-btn {
+    background: #4ade80;
+    color: #1e1e1e;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: #22c55e;
+    transform: translateY(-1px);
+}
+
+.copy-btn:active {
+    transform: translateY(0);
+}
+
+.code-content {
+    padding: 12px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #d4d4d4;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.code-content::-webkit-scrollbar {
+    height: 6px;
+}
+
+.code-content::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+.code-content::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 3px;
+}
+
+.code-content::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+/* Inline code styles */
+.inline-code {
+    background: #f1f5f9;
+    color: #e11d48;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.user-message .inline-code {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fbbf24;
+}
+
+/* Error message styles */
+.error-message {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 8px 0;
+    font-size: 14px;
+}
+
+.user-message .error-message {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.3);
+    color: #fca5a5;
+}
+
+/* Loading states */
+.message-content.loading {
+    opacity: 0.7;
+}
+
+.message-content.loading .message-text::after {
+    content: '...';
+    animation: loading-dots 1.5s infinite;
+}
+
+@keyframes loading-dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .chat-container {
+        height: 95vh;
+        border-radius: 15px;
+    }
+    
+    .chat-header {
+        padding: 15px 20px;
+    }
+    
+    .chat-header h1 {
+        font-size: 20px;
+    }
+    
+    .chat-messages {
+        padding: 15px 20px;
+    }
+    
+    .message {
+        max-width: 90%;
+    }
+    
+    .chat-input-container {
+        padding: 15px 20px;
+    }
+    
+    .input-footer {
+        flex-direction: column;
+        gap: 4px;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .chat-header h1 {
+        font-size: 18px;
+    }
+    
+    .status-text {
+        display: none;
+    }
+    
+    .message-text {
+        font-size: 14px;
+        padding: 10px 14px;
+    }
+    
+    .avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+    
+    .code-block {
+        margin: 6px 0;
+    }
+    
+    .code-content {
+        font-size: 12px;
+        padding: 10px;
+    }
+    
+    .copy-btn {
+        padding: 3px 6px;
+        font-size: 10px;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>Pyrefine</h1>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Online</span>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <div class="message-avatar">
+                    <div class="avatar">🤖</div>
+                </div>
+                <div class="message-content">
+                    <div class="message-text">Hello I am your Pyrefine. Enter your code to optimize?
+                    </div>
+                    <div class="message-time">Just now</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    placeholder="Type your message here..." 
+                    rows="1"
+                    maxlength="10000"
+                ></textarea>
+                <button id="sendButton" class="send-button">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-footer">
+                <span class="char-count">0/10000</span>
+                
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Gemini Chatbot functionality
+class GeminiChatbot {
+    constructor() {
+        this.chatMessages = document.getElementById('chatMessages');
+        this.messageInput = document.getElementById('messageInput');
+        this.sendButton = document.getElementById('sendButton');
+        this.charCount = document.querySelector('.char-count');
+        
+        this.isTyping = false;
+        this.conversationHistory = [];
+        
+        this.initializeEventListeners();
+        this.autoResizeTextarea();
+    }
+    
+    initializeEventListeners() {
+        // Send button click
+        this.sendButton.addEventListener('click', () => this.sendMessage());
+        
+        // Enter key to send, Shift+Enter for new line
+        this.messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                this.sendMessage();
+            }
+        });
+        
+        // Character count update
+        this.messageInput.addEventListener('input', () => {
+            this.updateCharCount();
+            this.autoResizeTextarea();
+        });
+        
+        // Focus input on load
+        this.messageInput.focus();
+    }
+    
+    autoResizeTextarea() {
+        this.messageInput.style.height = 'auto';
+        this.messageInput.style.height = Math.min(this.messageInput.scrollHeight, 120) + 'px';
+    }
+    
+    updateCharCount() {
+        const count = this.messageInput.value.length;
+        this.charCount.textContent = `${count}/1000`;
+        
+        // Disable send button if message is empty or too long
+        this.sendButton.disabled = count === 0 || count > 1000;
+    }
+    
+    async sendMessage() {
+        const message = this.messageInput.value.trim();
+        if (!message || this.isTyping) return;
+        
+        // Add user message to chat
+        this.addMessage(message, 'user');
+        
+        // Clear input
+        this.messageInput.value = '';
+        this.updateCharCount();
+        this.autoResizeTextarea();
+        
+        // Add to conversation history
+        this.conversationHistory.push({ role: 'user', content: message });
+        
+        // Show typing indicator
+        this.showTypingIndicator();
+        
+        try {
+            // Make API call to Gemini backend
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            this.hideTypingIndicator();
+            
+            // Check if response contains code
+            if (this.containsCode(data.response)) {
+                this.addCodeMessage(data.response);
+            } else {
+                this.addMessage(data.response, 'bot');
+            }
+            
+            this.conversationHistory.push({ role: 'assistant', content: data.response });
+            
+        } catch (error) {
+            this.hideTypingIndicator();
+            console.error('Error sending message:', error);
+            this.addMessage('Sorry, I encountered an error. Please try again.', 'bot');
+        }
+    }
+    
+    addMessage(content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        
+        const avatar = sender === 'user' ? '👤' : '🤖';
+        const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+        // Process content for inline code and formatting
+        const processedContent = this.processMessageContent(content);
+        
+        messageDiv.innerHTML = `
+            <div class="message-avatar">
+                <div class="avatar">${avatar}</div>
+            </div>
+            <div class="message-content">
+                <div class="message-text">${processedContent}</div>
+                <div class="message-time">${currentTime}</div>
+            </div>
+        `;
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+    
+    addCodeMessage(content) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'message bot-message';
+        
+        const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const codeId = 'code_' + Date.now();
+        const language = this.detectLanguage(content);
+        
+        messageDiv.innerHTML = `
+            <div class="message-avatar">
+                <div class="avatar">🤖</div>
+            </div>
+            <div class="message-content">
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-language">${language}</span>
+                        <button class="copy-btn" onclick="copyCode('${codeId}')">Copy</button>
+                    </div>
+                    <div class="code-content" id="${codeId}">${this.escapeHtml(content)}</div>
+                </div>
+                <div class="message-time">${currentTime}</div>
+            </div>
+        `;
+        
+        this.chatMessages.appendChild(messageDiv);
+        this.scrollToBottom();
+    }
+    
+    containsCode(text) {
+        const codeRegex = /def |class |import |function |const |let |var |#include|<?php|<?xml|<!DOCTYPE|<html|<script|<style|SELECT |INSERT |UPDATE |DELETE |CREATE |ALTER |DROP /i;
+        return codeRegex.test(text);
+    }
+    
+    detectLanguage(text) {
+        if (/def |class |import /.test(text)) return 'Python';
+        if (/function |const |let |var /.test(text)) return 'JavaScript';
+        if (/#include|int main/.test(text)) return 'C++';
+        if (/<?php/.test(text)) return 'PHP';
+        if (/<?xml|<!DOCTYPE/.test(text)) return 'XML';
+        if (/<html|<script|<style/.test(text)) return 'HTML';
+        if (/SELECT |INSERT |UPDATE |DELETE |CREATE /.test(text)) return 'SQL';
+        return 'Code';
+    }
+    
+    processMessageContent(content) {
+        // Convert inline code (backticks) to styled spans
+        content = content.replace(/`([^`]+)`/g, '<span class="inline-code">$1</span>');
+        
+        // Convert line breaks to <br> tags
+        content = content.replace(/\n/g, '<br>');
+        
+        return this.escapeHtml(content);
+    }
+    
+    showTypingIndicator() {
+        this.isTyping = true;
+        
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message bot-message typing-indicator show';
+        typingDiv.innerHTML = `
+            <div class="message-avatar">
+                <div class="avatar">🤖</div>
+            </div>
+            <div class="message-content">
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+        `;
+        
+        this.chatMessages.appendChild(typingDiv);
+        this.scrollToBottom();
+    }
+    
+    hideTypingIndicator() {
+        this.isTyping = false;
+        const typingIndicator = this.chatMessages.querySelector('.typing-indicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+    
+    scrollToBottom() {
+        this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+    }
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Global function for copying code (called from HTML)
+    static copyCode(codeId) {
+        const codeBlock = document.getElementById(codeId);
+        if (codeBlock) {
+            navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+                // Show success feedback
+                const button = codeBlock.parentElement.querySelector('.copy-btn');
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.style.background = '#22c55e';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = '#4ade80';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy code: ', err);
+                alert('Failed to copy code to clipboard');
+            });
+        }
+    }
+}
+
+// Initialize chatbot when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    new GeminiChatbot();
+});
+
+// Global function for copying code (accessible from HTML onclick)
+function copyCode(codeId) {
+    GeminiChatbot.copyCode(codeId);
+}
+
+// Add some fun animations and interactions
+document.addEventListener('DOMContentLoaded', () => {
+    // Add smooth scroll behavior
+    document.documentElement.style.scrollBehavior = 'smooth';
+    
+    // Add click animation to send button
+    const sendButton = document.getElementById('sendButton');
+    sendButton.addEventListener('click', function() {
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            this.style.transform = '';
+        }, 150);
+    });
+    
+    // Add focus effects to input
+    const messageInput = document.getElementById('messageInput');
+    messageInput.addEventListener('focus', function() {
+        this.parentElement.style.borderColor = '#667eea';
+        this.parentElement.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+    });
+    
+    messageInput.addEventListener('blur', function() {
+        this.parentElement.style.borderColor = '#e5e7eb';
+        this.parentElement.style.boxShadow = 'none';
+    });
+});
+
+    </script>
+</body>
+</html>
