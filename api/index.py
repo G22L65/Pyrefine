@@ -3,18 +3,20 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+from mangum import Mangum
 from ai import chat_with_gemini
 
 app = FastAPI()
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Templates
 templates = Jinja2Templates(directory="templates")
 
-# Request model
 class ChatRequest(BaseModel):
     message: str
 
-# Response model
 class ChatResponse(BaseModel):
     response: str
 
@@ -26,3 +28,6 @@ async def home(request: Request):
 async def chat_endpoint(request: ChatRequest):
     bot_reply = chat_with_gemini(request.message)
     return {"response": bot_reply}
+
+# Needed for Vercel serverless
+handler = Mangum(app)
